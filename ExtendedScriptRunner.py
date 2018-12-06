@@ -2,15 +2,16 @@ import maya.cmds as cmds
 import os 
 import importlib
 import imp
+import sys
 
-winIDWork = "ScriptRunner"
+winIDWork = "Script Runner"
 if cmds.window(winIDWork, exists=True):
     cmds.deleteUI(winIDWork)
 
-myWorkWindow = cmds.window(winIDWork, title = "ScriptRunner", menuBar = True, nde = True, s = True, wh =( 50, 100))
+myWorkWindow = cmds.window(winIDWork, title = "Script Runner", menuBar = True, nde = True, s = True, wh =( 50, 100))
 cmds.rowColumnLayout(nc = 1)
 
-cmds.button( label='Run Script', w = 250, h = 30, backgroundColor = [0.588, 0.972, 0.815], command= "runScript()" ) 
+cmds.button( label='Run Single Script', w = 250, h = 30, backgroundColor = [0.588, 0.972, 0.815], command= "runScript()" ) 
 cmds.button( label='Select File', w = 250, h = 30, backgroundColor = [0.588, 0.972, 0.815], command= "selectFile()" ) 
 cmds.button( label='Add Script to Selected File', w = 250, h = 30, backgroundColor = [0.588, 0.972, 0.815], command= "addScript()" ) 
 cmds.button( label='Run Scripts Selected File (In order)', w = 250, h = 30, backgroundColor = [0.588, 0.972, 0.815], command= "runScriptsFromFile()" ) 
@@ -19,9 +20,8 @@ cmds.showWindow( myWorkWindow )
 
     
 def runScript():
-    myFile = cmds.fileDialog2(dialogStyle=2)
+    myFile = cmds.fileDialog2(dialogStyle=2, fileFilter = "*.py")
     tempFile = myFile[0].split("/")
-    print tempFile[-1]
     
     changeDir = myFile[0]
     cnge = changeDir.replace(tempFile[-1], "")
@@ -29,17 +29,15 @@ def runScript():
     sys.path.insert(0, os.getcwd())
     
     importName = tempFile[-1].split(".")
-    print importName[0]
     myImport = importlib.import_module(importName[0])
+    reload(myImport)
     
 def selectFile():
     global selectedTextFile
-    selectedTextFile = cmds.fileDialog2(dialogStyle=2)
-    print selectedTextFile[0]    
+    selectedTextFile = cmds.fileDialog2(dialogStyle=2, fileFilter = "*.txt")
     
 def addScript():
-    myFile = cmds.fileDialog2(dialogStyle=2)
-    print myFile[0]
+    myFile = cmds.fileDialog2(dialogStyle=2, fileFilter = "*.py")
     s = str(selectedTextFile[0])
     with open(s, "a+") as f:
         f.write(myFile[0])
@@ -49,11 +47,7 @@ def addScript():
     
 def runScriptsFromFile():
     try:
-        global original
-        myFile = cmds.fileDialog2(dialogStyle=2)
-        print myFile[0]
-        original = myFile[0]
-        print ""
+        myFile = cmds.fileDialog2(dialogStyle=2, fileFilter = "*.txt")
         moduleList = []
         s = str(myFile[0])
         with open(s, "r") as f:
@@ -63,16 +57,10 @@ def runScriptsFromFile():
             moduleList.append(i)
             
         for i in moduleList:
-            #print "&&&&&&&&&&&&&&&&&&&"
-            #print i
-            #print "&&&&&&&&&&&&&&&&&&&"
             tempFile = i.split("/")
             a = i[:-5]
             importName = tempFile[-1].split(".")
-            #print importName[0]
-    
-            
-            test = importName[0]
+                
             for x in reversed(a):  
                 if(x == "/"):
                     break
@@ -84,12 +72,7 @@ def runScriptsFromFile():
             if(importName[0] != myFile[0].split("/")[-1].split(".")[0]):
                 myImport = importlib.import_module(importName[0])
                 print "Imported: " + importName[0]
+                reload(myImport)
     except Exception as e:
         print e
-   # print moduleList
-    
-    
-   #just automatically find path and change directory to that file 
-    
-    
-    
+        
